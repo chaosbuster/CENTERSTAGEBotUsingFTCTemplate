@@ -48,39 +48,12 @@ import trclib.vision.TrcHomographyMapper;
 public class RobotParams
 {
     /**
-     * This class contains field dimension constants. Generally, these should not be changed.
-     */
-    public static class Field
-    {
-        public static final double FULL_FIELD_INCHES            = 141.24;
-        public static final double HALF_FIELD_INCHES            = FULL_FIELD_INCHES/2.0;
-        public static final double FULL_TILE_INCHES             = FULL_FIELD_INCHES/6.0;
-    }   //class Field
-
-    /**
-     * This class contains season specific game element information.
-     */
-    public static class Game
-    {
-        public static final TrcPose2D[] APRILTAG_POSES          = new TrcPose2D[] {
-            new TrcPose2D(0.0, 0.0, 0.0),   // TagId 1
-            new TrcPose2D(0.0, 0.0, 0.0),   // TagId 2
-            new TrcPose2D(0.0, 0.0, 0.0),   // TagId 3
-            new TrcPose2D(0.0, 0.0, 0.0)    // TagId 4
-        };
-    }   //class Game
-
-    /**
      * This class contains miscellaneous robot info.
      */
     public static class Robot
     {
-        public static final String TEAM_FOLDER_PATH             =
-            Environment.getExternalStorageDirectory().getPath() + "/FIRST/ftcTeam";
-        public static final String LOG_FOLDER_PATH              = TEAM_FOLDER_PATH + "/tracelogs";
-        public static final String STEER_ZERO_CAL_FILE          = TEAM_FOLDER_PATH + "/SteerZeroCalibration.txt";
         public static final double DASHBOARD_UPDATE_INTERVAL    = 0.1;      // in msec
-        public static final String ROBOT_CODEBASE               = "Robot2025";
+        public static final String ROBOT_CODEBASE               = "CoachCENTERSTAGE";
         public static final double ROBOT_LENGTH                 = 17.0;
         public static final double ROBOT_WIDTH                  = 17.0;
         // Robot Drive Parameters.
@@ -215,6 +188,8 @@ public class RobotParams
             webCam1 = new FrontCamParams();
             // Back Camera
             webCam2 = null;
+            // Limelight  TODO: CHANGE TO HUSKYLENS
+            limelight = null;
         }   //VisionOnlyParams
     }   //class VisionOnlyParams
 
