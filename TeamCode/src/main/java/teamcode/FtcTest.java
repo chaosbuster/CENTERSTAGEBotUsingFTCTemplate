@@ -37,7 +37,6 @@ import ftclib.driverio.FtcMenu;
 import ftclib.driverio.FtcValueMenu;
 import ftclib.robotcore.FtcPidCoeffCache;
 import ftclib.vision.FtcLimelightVision;
-import teamcode.vision.Vision;
 import trclib.command.CmdDriveMotorsTest;
 import trclib.command.CmdPidDrive;
 import trclib.command.CmdTimedDrive;
@@ -117,7 +116,6 @@ public class FtcTest extends FtcTeleOp
 
     }   //class TestChoices
 
-    private final FtcPidCoeffCache pidCoeffCache = new FtcPidCoeffCache(RobotParams.Robot.TEAM_FOLDER_PATH);
     private final TestChoices testChoices = new TestChoices();
     private TrcElapsedTimer elapsedTimer = null;
     private FtcChoiceMenu<Test> testMenu = null;
@@ -221,49 +219,9 @@ public class FtcTest extends FtcTeleOp
         switch (testChoices.test)
         {
             case VISION_TEST:
-                if (robot.vision != null)
-                {
-                    if (robot.vision.vision != null)
-                    {
-                        exposure = robot.vision.vision.getCurrentExposure();
-                    }
-                    // Vision generally will impact performance, so we only enable it if it's needed.
-                    if (robot.vision.aprilTagVision != null)
-                    {
-                        robot.globalTracer.traceInfo(moduleName, "Enabling AprilTagVision.");
-                        robot.vision.setAprilTagVisionEnabled(true);
-                    }
-
-                    if (robot.vision.redBlobVision != null)
-                    {
-                        robot.globalTracer.traceInfo(moduleName, "Enabling RedBlobVision.");
-                        robot.vision.setColorBlobVisionEnabled(Vision.ColorBlobType.RedBlob, true);
-                    }
-
-                    if (robot.vision.blueBlobVision != null)
-                    {
-                        robot.globalTracer.traceInfo(moduleName, "Enabling BlueBlobVision.");
-                        robot.vision.setColorBlobVisionEnabled(Vision.ColorBlobType.BlueBlob, true);
-                    }
-
-                    if (robot.vision.limelightVision != null)
-                    {
-                        robot.globalTracer.traceInfo(moduleName, "Enabling LimelightVision.");
-                        robot.vision.setLimelightVisionEnabled(0, true);
-                    }
-                }
                 break;
 
             case TUNE_COLORBLOB_VISION:
-                if (robot.vision != null && robot.vision.rawColorBlobVision != null)
-                {
-                    robot.globalTracer.traceInfo(moduleName, "Enabling FtcRawEocvVision.");
-                    robot.vision.setRawColorBlobVisionEnabled(true);
-                    colorThresholds = robot.vision.getRawColorBlobThresholds();
-                    colorThresholdIndex = 0;
-                    colorThresholdMultiplier = 1.0;
-                    updateColorThresholds();
-                }
                 break;
 
             case PID_DRIVE:
@@ -426,12 +384,10 @@ public class FtcTest extends FtcTeleOp
             {
                 case SENSORS_TEST:
                 case SUBSYSTEMS_TEST:
-                    doSensorsTest();
                     break;
 
                 case VISION_TEST:
                 case TUNE_COLORBLOB_VISION:
-                    doVisionTest();
                     break;
 
                 case X_TIMED_DRIVE:
@@ -530,205 +486,33 @@ public class FtcTest extends FtcTeleOp
         switch (button)
         {
             case A:
-                if (testChoices.test == Test.CALIBRATE_SWERVE_STEERING)
-                {
-                    if (pressed && robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
-                    {
-                        FtcSwerveDrive swerveDrive = (FtcSwerveDrive) robot.robotDrive;
-
-                        steerCalibrating = !steerCalibrating;
-                        if (steerCalibrating)
-                        {
-                            // Start steer calibration.
-                            swerveDrive.startSteeringCalibration();
-                        }
-                        else
-                        {
-                            // Stop steer calibration.
-                            swerveDrive.stopSteeringCalibration();
-                        }
-                    }
-                    passToTeleOp = false;
-                }
                 break;
 
             case B:
-                if (testChoices.test == Test.TUNE_COLORBLOB_VISION &&
-                    robot.vision != null && robot.vision.rawColorBlobVision != null)
-                {
-                    if (pressed)
-                    {
-                        // Increment to next color threshold index.
-                        colorThresholdIndex++;
-                        if (colorThresholdIndex >= colorThresholds.length)
-                        {
-                            colorThresholdIndex = colorThresholds.length - 1;
-                        }
-                    }
-                    passToTeleOp = false;
-                }
-                else if (testChoices.test == Test.VISION_TEST && pressed)
-                {
-                    fpsMeterEnabled = !fpsMeterEnabled;
-                    robot.vision.setFpsMeterEnabled(fpsMeterEnabled);
-                    robot.globalTracer.traceInfo(moduleName, "fpsMeterEnabled = %s", fpsMeterEnabled);
-                }
                 break;
 
             case X:
-                if (testChoices.test == Test.TUNE_COLORBLOB_VISION &&
-                    robot.vision != null && robot.vision.rawColorBlobVision != null)
-                {
-                    if (pressed)
-                    {
-                        // Decrement to previous color threshold index.
-                        colorThresholdIndex--;
-                        if (colorThresholdIndex < 0)
-                        {
-                            colorThresholdIndex = 0;
-                        }
-                    }
-                    passToTeleOp = false;
-                }
                 break;
 
             case Y:
-                if (testChoices.test == Test.TUNE_COLORBLOB_VISION &&
-                    robot.vision != null && robot.vision.rawColorBlobVision != null)
-                {
-                    if (pressed)
-                    {
-                        // Set display to next intermediate Mat in the pipeline.
-                        robot.vision.rawColorBlobVision.getPipeline().setNextVideoOutput();
-                    }
-                    passToTeleOp = false;
-                }
                 break;
 
             case LeftBumper:
-                if (testChoices.test == Test.VISION_TEST && robot.vision != null && robot.vision.vision != null)
-                {
-                    if (pressed)
-                    {
-                        exposure -= 100;
-                        robot.vision.vision.setManualExposure(exposure, null);
-                    }
-                    passToTeleOp = false;
-                }
                 break;
 
             case RightBumper:
-                if (testChoices.test == Test.VISION_TEST && robot.vision != null && robot.vision.vision != null)
-                {
-                    if (pressed)
-                    {
-                        exposure += 100;
-                        robot.vision.vision.setManualExposure(exposure, null);
-                    }
-                    passToTeleOp = false;
-                }
                 break;
 
             case DpadUp:
-                if (testChoices.test == Test.SUBSYSTEMS_TEST)
-                {
-                    // If we are moving swerve steering, make sure TeleOp doesn't interfere.
-                    teleOpControlEnabled = !pressed;
-                    if (pressed && robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
-                    {
-                        FtcSwerveDrive swerveDrive = (FtcSwerveDrive) robot.robotDrive;
-                        swerveDrive.setSteerAngle(0.0, false, true);
-                    }
-                    passToTeleOp = false;
-                }
-                else if (testChoices.test == Test.TUNE_COLORBLOB_VISION &&
-                         robot.vision != null && robot.vision.rawColorBlobVision != null)
-                {
-                    if (pressed &&
-                        colorThresholds[colorThresholdIndex] + colorThresholdMultiplier <=
-                        COLOR_THRESHOLD_HIGH_RANGES[colorThresholdIndex/2])
-                    {
-                        // Increment color threshold value.
-                        colorThresholds[colorThresholdIndex] += colorThresholdMultiplier;
-                        updateColorThresholds();
-                    }
-                    passToTeleOp = false;
-                }
                 break;
 
             case DpadDown:
-                if (testChoices.test == Test.SUBSYSTEMS_TEST)
-                {
-                    // If we are moving swerve steering, make sure TeleOp doesn't interfere.
-                    teleOpControlEnabled = !pressed;
-                    if (pressed && robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
-                    {
-                        FtcSwerveDrive swerveDrive = (FtcSwerveDrive) robot.robotDrive;
-                        swerveDrive.setSteerAngle(180.0, false, true);
-                    }
-                    passToTeleOp = false;
-                }
-                else if (testChoices.test == Test.TUNE_COLORBLOB_VISION &&
-                         robot.vision != null && robot.vision.rawColorBlobVision != null)
-                {
-                    if (pressed &&
-                        colorThresholds[colorThresholdIndex] - colorThresholdMultiplier >=
-                        COLOR_THRESHOLD_LOW_RANGES[colorThresholdIndex/2])
-                    {
-                        // Decrement color threshold value.
-                        colorThresholds[colorThresholdIndex] -= colorThresholdMultiplier;
-                        updateColorThresholds();
-                    }
-                    passToTeleOp = false;
-                }
                 break;
 
             case DpadLeft:
-                if (testChoices.test == Test.SUBSYSTEMS_TEST)
-                {
-                    // If we are moving swerve steering, make sure TeleOp doesn't interfere.
-                    teleOpControlEnabled = !pressed;
-                    if (pressed && robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
-                    {
-                        FtcSwerveDrive swerveDrive = (FtcSwerveDrive) robot.robotDrive;
-                        swerveDrive.setSteerAngle(270.0, false, true);
-                    }
-                    passToTeleOp = false;
-                }
-                else if (testChoices.test == Test.TUNE_COLORBLOB_VISION &&
-                         robot.vision != null && robot.vision.rawColorBlobVision != null)
-                {
-                    if (pressed && colorThresholdMultiplier * 10.0 <= 100.0)
-                    {
-                        // Increment the significant multiplier.
-                        colorThresholdMultiplier *= 10.0;
-                    }
-                    passToTeleOp = false;
-                }
                 break;
 
             case DpadRight:
-                if (testChoices.test == Test.SUBSYSTEMS_TEST)
-                {
-                    // If we are moving swerve steering, make sure TeleOp doesn't interfere.
-                    teleOpControlEnabled = !pressed;
-                    if (pressed && robot.robotDrive != null && robot.robotDrive instanceof FtcSwerveDrive)
-                    {
-                        FtcSwerveDrive swerveDrive = (FtcSwerveDrive) robot.robotDrive;
-                        swerveDrive.setSteerAngle(90.0, false, true);
-                    }
-                    passToTeleOp = false;
-                }
-                else if (testChoices.test == Test.TUNE_COLORBLOB_VISION &&
-                         robot.vision != null && robot.vision.rawColorBlobVision != null)
-                {
-                    if (pressed && colorThresholdMultiplier / 10.0 >= 1.0)
-                    {
-                        // Decrement the significant multiplier.
-                        colorThresholdMultiplier /= 10.0;
-                    }
-                    passToTeleOp = false;
-                }
                 break;
 
             case Back:
@@ -785,14 +569,6 @@ public class FtcTest extends FtcTeleOp
     }   //operatorButtonEvent
 
     /**
-     * This method displays the current color thresholds on the dashboard.
-     */
-    private void updateColorThresholds()
-    {
-        robot.dashboard.displayPrintf(7, "Thresholds: %s", Arrays.toString(colorThresholds));
-    }   //updateColorThresholds
-
-    /**
      * This method creates and displays the test menus and record the selected choices.
      */
     private void doTestMenus()
@@ -801,64 +577,13 @@ public class FtcTest extends FtcTeleOp
         // Create menus.
         //
         testMenu = new FtcChoiceMenu<>("Tests:", null);
-        FtcValueMenu xTargetMenu = new FtcValueMenu(
-            "xTarget:", testMenu, -10.0, 10.0, 0.5, 0.0, " %.1f ft");
-        FtcValueMenu yTargetMenu = new FtcValueMenu(
-            "yTarget:", testMenu, -10.0, 10.0, 0.5, 0.0, " %.1f ft");
-        FtcValueMenu turnTargetMenu = new FtcValueMenu(
-            "turnTarget:", testMenu, -180.0, 180.0, 5.0, 0.0, " %.0f deg");
-        FtcValueMenu driveTimeMenu = new FtcValueMenu(
-            "Drive time:", testMenu, 1.0, 10.0, 1.0, 4.0, " %.0f sec");
-        FtcValueMenu drivePowerMenu = new FtcValueMenu(
-            "Drive power:", testMenu, -1.0, 1.0, 0.1, 0.5, " %.1f");
-        //
-        // PID Tuning menus.
-        //
-        FtcValueMenu tuneKpMenu = new FtcValueMenu(
-            "Kp:", testMenu, 0.0, 1.0, 0.001, this::getTuneKp, " %f");
-        FtcValueMenu tuneKiMenu = new FtcValueMenu(
-            "Ki:", tuneKpMenu, 0.0, 1.0, 0.001, this::getTuneKi, " %f");
-        FtcValueMenu tuneKdMenu = new FtcValueMenu(
-            "Kd:", tuneKiMenu, 0.0, 1.0, 0.001, this::getTuneKd, " %f");
-        FtcValueMenu tuneKfMenu = new FtcValueMenu(
-            "Kf:", tuneKdMenu, 0.0, 1.0, 0.001, this::getTuneKf, " %f");
-        FtcValueMenu tuneDistanceMenu = new FtcValueMenu(
-            "PID Tune distance:", tuneKfMenu, -10.0, 10.0, 0.5, 0.0,
-            " %.1f ft");
-        FtcValueMenu tuneHeadingMenu = new FtcValueMenu(
-            "PID Tune heading:", tuneDistanceMenu, -180.0, 180.0, 5.0, 0.0,
-            " %.0f deg");
-        FtcValueMenu tuneDrivePowerMenu = new FtcValueMenu(
-            "PID Tune drive power:", tuneHeadingMenu, -1.0, 1.0, 0.1, 1.0,
-            " %.1f");
+
         //
         // Populate menus.
         //
-        testMenu.addChoice("Sensors test", Test.SENSORS_TEST, true);
-        testMenu.addChoice("Subsystems test", Test.SUBSYSTEMS_TEST, false);
-        testMenu.addChoice("Vision test", Test.VISION_TEST, false);
-        testMenu.addChoice("Tune ColorBlob vision", Test.TUNE_COLORBLOB_VISION, false);
-        testMenu.addChoice("Drive speed test", Test.DRIVE_SPEED_TEST, false);
         testMenu.addChoice("Drive motors test", Test.DRIVE_MOTORS_TEST, false);
-        testMenu.addChoice("X Timed drive", Test.X_TIMED_DRIVE, false, driveTimeMenu);
-        testMenu.addChoice("Y Timed drive", Test.Y_TIMED_DRIVE, false, driveTimeMenu);
-        testMenu.addChoice("PID drive", Test.PID_DRIVE, false, xTargetMenu);
-        testMenu.addChoice("Tune X PID", Test.TUNE_X_PID, false, tuneKpMenu);
-        testMenu.addChoice("Tune Y PID", Test.TUNE_Y_PID, false, tuneKpMenu);
-        testMenu.addChoice("Tune Turn PID", Test.TUNE_TURN_PID, false, tuneKpMenu);
         testMenu.addChoice("Pure Pursuit Drive", Test.PURE_PURSUIT_DRIVE, false);
-        testMenu.addChoice("Calibrate Swerve Steering", Test.CALIBRATE_SWERVE_STEERING, false);
 
-        xTargetMenu.setChildMenu(yTargetMenu);
-        yTargetMenu.setChildMenu(turnTargetMenu);
-        turnTargetMenu.setChildMenu(drivePowerMenu);
-        driveTimeMenu.setChildMenu(drivePowerMenu);
-        tuneKpMenu.setChildMenu(tuneKiMenu);
-        tuneKiMenu.setChildMenu(tuneKdMenu);
-        tuneKdMenu.setChildMenu(tuneKfMenu);
-        tuneKfMenu.setChildMenu(tuneDistanceMenu);
-        tuneDistanceMenu.setChildMenu(tuneHeadingMenu);
-        tuneHeadingMenu.setChildMenu(tuneDrivePowerMenu);
         //
         // Traverse menus.
         //
@@ -867,226 +592,15 @@ public class FtcTest extends FtcTeleOp
         // Fetch choices.
         //
         testChoices.test = testMenu.getCurrentChoiceObject();
-        testChoices.xTarget = xTargetMenu.getCurrentValue();
-        testChoices.yTarget = yTargetMenu.getCurrentValue();
-        testChoices.turnTarget = turnTargetMenu.getCurrentValue();
-        testChoices.driveTime = driveTimeMenu.getCurrentValue();
-        testChoices.drivePower = drivePowerMenu.getCurrentValue();
-        testChoices.tunePidCoeffs = new TrcPidController.PidCoefficients(
-            tuneKpMenu.getCurrentValue(), tuneKiMenu.getCurrentValue(),
-            tuneKdMenu.getCurrentValue(),tuneKfMenu.getCurrentValue());
-        testChoices.tuneDistance = tuneDistanceMenu.getCurrentValue();
-        testChoices.tuneHeading = tuneHeadingMenu.getCurrentValue();
-        testChoices.tuneDrivePower = tuneDrivePowerMenu.getCurrentValue();
 
-        TrcPidController tunePidCtrl = getTunePidController(testChoices.test);
-        if (tunePidCtrl != null)
-        {
-            //
-            // Write the user input PID coefficients to a cache file so tune PID menu can read them as start value
-            // next time.
-            //
-            pidCoeffCache.writeCachedPidCoeff(tunePidCtrl, testChoices.tunePidCoeffs);
-        }
+
+
         //
         // Show choices.
         //
         robot.dashboard.displayPrintf(1, "Test Choices: %s", testChoices);
     }   //doTestMenus
 
-    /**
-     * This method returns the PID controller for the tune test.
-     *
-     * @param test specifies the selected test.
-     * @return tune PID controller.
-     */
-    private TrcPidController getTunePidController(Test test)
-    {
-        TrcPidController pidCtrl;
-
-        switch (test)
-        {
-            case TUNE_X_PID:
-                pidCtrl = robot.robotDrive.pidDrive.getXPidCtrl();
-                break;
-
-            case TUNE_Y_PID:
-                pidCtrl = robot.robotDrive.pidDrive.getYPidCtrl();
-                break;
-
-            case TUNE_TURN_PID:
-                pidCtrl = robot.robotDrive.pidDrive.getTurnPidCtrl();
-                break;
-
-            default:
-                pidCtrl = null;
-        }
-
-        return pidCtrl;
-    }   //getTunePidController
-
-    /**
-     * This method is called by the tuneKpMenu to get the start value to be displayed as the current value of the menu.
-     *
-     * @return start Kp value of the PID controller being tuned.
-     */
-    private double getTuneKp()
-    {
-        double value = 0.0;
-        TrcPidController tunePidCtrl = getTunePidController(testMenu.getCurrentChoiceObject());
-
-        if (tunePidCtrl != null)
-        {
-            value = pidCoeffCache.getCachedPidCoeff(tunePidCtrl).kP;
-        }
-
-        return value;
-    }   //getTuneKp
-
-    /**
-     * This method is called by the tuneKiMenu to get the start value to be displayed as the current value of the menu.
-     *
-     * @return start Ki value of the PID controller being tuned.
-     */
-    private double getTuneKi()
-    {
-        double value = 0.0;
-        TrcPidController tunePidCtrl = getTunePidController(testMenu.getCurrentChoiceObject());
-
-        if (tunePidCtrl != null)
-        {
-            value = pidCoeffCache.getCachedPidCoeff(tunePidCtrl).kI;
-        }
-
-        return value;
-    }   //getTuneKi
-
-    /**
-     * This method is called by the tuneKdMenu to get the start value to be displayed as the current value of the menu.
-     *
-     * @return start Kd value of the PID controller being tuned.
-     */
-    private double getTuneKd()
-    {
-        double value = 0.0;
-        TrcPidController tunePidCtrl = getTunePidController(testMenu.getCurrentChoiceObject());
-
-        if (tunePidCtrl != null)
-        {
-            value = pidCoeffCache.getCachedPidCoeff(tunePidCtrl).kD;
-        }
-
-        return value;
-    }   //getTuneKd
-
-    /**
-     * This method is called by the tuneKfMenu to get the start value to be displayed as the current value of the menu.
-     *
-     * @return start Kf value of the PID controller being tuned.
-     */
-    double getTuneKf()
-    {
-        double value = 0.0;
-        TrcPidController tunePidCtrl = getTunePidController(testMenu.getCurrentChoiceObject());
-
-        if (tunePidCtrl != null)
-        {
-            value = pidCoeffCache.getCachedPidCoeff(tunePidCtrl).kF;
-        }
-
-        return value;
-    }   //getTuneKF
-
-    /**
-     * This method reads all sensors and prints out their values. This is a very useful diagnostic tool to check
-     * if all sensors are working properly. For encoders, since test sensor mode is also teleop mode, you can
-     * operate the gamepads to turn the motors and check the corresponding encoder counts.
-     */
-    private void doSensorsTest()
-    {
-        int lineNum = 9;
-        //
-        // Read all sensors and display on the dashboard.
-        // Drive the robot around to sample different locations of the field.
-        //
-        if (robot.robotDrive != null)
-        {
-            robot.dashboard.displayPrintf(
-                lineNum++, "DriveEnc: lf=%.0f,rf=%.0f,lb=%.0f,rb=%.0f",
-                robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_LEFT_FRONT].getPosition(),
-                robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_RIGHT_FRONT].getPosition(),
-                robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_LEFT_BACK].getPosition(),
-                robot.robotDrive.driveMotors[FtcRobotDrive.INDEX_RIGHT_BACK].getPosition());
-
-            if (robot.robotDrive instanceof FtcSwerveDrive)
-            {
-                FtcSwerveDrive swerveDrive = (FtcSwerveDrive) robot.robotDrive;
-                robot.dashboard.displayPrintf(
-                    lineNum++, "SteerEnc: lf=%.2f, rf=%.2f, lb=%.2f, rb=%.2f",
-                    swerveDrive.steerEncoders[FtcRobotDrive.INDEX_LEFT_FRONT].getScaledPosition(),
-                    swerveDrive.steerEncoders[FtcRobotDrive.INDEX_RIGHT_FRONT].getScaledPosition(),
-                    swerveDrive.steerEncoders[FtcRobotDrive.INDEX_LEFT_BACK].getScaledPosition(),
-                    swerveDrive.steerEncoders[FtcRobotDrive.INDEX_RIGHT_BACK].getScaledPosition());
-                robot.dashboard.displayPrintf(
-                    lineNum++, "SteerRaw: lf=%.2f, rf=%.2f, lb=%.2f, rb=%.2f",
-                    swerveDrive.steerEncoders[FtcRobotDrive.INDEX_LEFT_FRONT].getRawPosition(),
-                    swerveDrive.steerEncoders[FtcRobotDrive.INDEX_RIGHT_FRONT].getRawPosition(),
-                    swerveDrive.steerEncoders[FtcRobotDrive.INDEX_LEFT_BACK].getRawPosition(),
-                    swerveDrive.steerEncoders[FtcRobotDrive.INDEX_RIGHT_BACK].getRawPosition());
-            }
-
-            if (robot.robotDrive.gyro != null)
-            {
-                robot.dashboard.displayPrintf(
-                    lineNum++, "Gyro(x,y,z): Heading=(%.1f,%.1f,%.1f), Rate=(%.3f,%.3f,%.3f)",
-                    robot.robotDrive.gyro.getXHeading().value, robot.robotDrive.gyro.getYHeading().value,
-                    robot.robotDrive.gyro.getZHeading().value, robot.robotDrive.gyro.getXRotationRate().value,
-                    robot.robotDrive.gyro.getYRotationRate().value, robot.robotDrive.gyro.getZRotationRate().value);
-            }
-        }
-    }   //doSensorsTest
-
-    /**
-     * This method calls vision code to detect target objects and display their info.
-     */
-    private void doVisionTest()
-    {
-        if (robot.vision != null)
-        {
-            int lineNum = 9;
-
-            if (robot.vision.vision != null)
-            {
-                // displayExposureSettings is only available for VisionPortal.
-                robot.vision.displayExposureSettings(lineNum++);
-            }
-
-            if (robot.vision.rawColorBlobVision != null)
-            {
-                robot.vision.getDetectedRawColorBlob(lineNum++);
-            }
-
-            if (robot.vision.aprilTagVision != null)
-            {
-                robot.vision.getDetectedAprilTag(null, lineNum++);
-            }
-
-            if (robot.vision.redBlobVision != null)
-            {
-                robot.vision.getDetectedColorBlob(Vision.ColorBlobType.RedBlob, lineNum++);
-            }
-
-            if (robot.vision.blueBlobVision != null)
-            {
-                robot.vision.getDetectedColorBlob(Vision.ColorBlobType.BlueBlob, lineNum++);
-            }
-
-            if (robot.vision.limelightVision != null)
-            {
-                robot.vision.getLimelightDetectedObject(FtcLimelightVision.ResultType.Fiducial, null, lineNum++);
-            }
-        }
-    }   //doVisionTest
 
     /**
      * This method is called to determine if Test mode is allowed to do teleop control of the robot.

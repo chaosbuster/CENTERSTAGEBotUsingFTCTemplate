@@ -120,17 +120,8 @@ public class FtcAuto extends FtcOpMode
         //
         // Create and initialize robot object.
         //
-        robot = new Robot(TrcRobot.getRunMode());
-        //
-        // Open trace log.
-        //
-        if (RobotParams.Preferences.useTraceLog)
-        {
-            Robot.matchInfo = FtcMatchInfo.getMatchInfo();
-            String filePrefix = String.format(
-                Locale.US, "%s%02d_Auto", Robot.matchInfo.matchType, Robot.matchInfo.matchNumber);
-            TrcDbgTrace.openTraceLog(RobotParams.Robot.LOG_FOLDER_PATH, filePrefix);
-        }
+        robot = new Robot();
+
         //
         // Create and run choice menus.
         //
@@ -162,30 +153,6 @@ public class FtcAuto extends FtcOpMode
                 break;
         }
 
-        if (robot.vision != null)
-        {
-            // Enabling vision early so we can detect target before match starts if necessary.
-            // Only enable the necessary vision for that purpose.
-//            if (robot.vision.aprilTagVision != null)
-//            {
-//                robot.globalTracer.traceInfo(moduleName, "Enabling AprilTagVision.");
-//                robot.vision.setAprilTagVisionEnabled(true);
-//            }
-//
-//            if (robot.vision.redBlobVision != null)
-//            {
-//                robot.globalTracer.traceInfo(moduleName, "Enabling RedBlobVision.");
-//                robot.vision.setRedBlobVisionEnabled(true);
-//            }
-//
-//            if (robot.vision.blueBlobVision != null)
-//            {
-//                robot.globalTracer.traceInfo(moduleName, "Enabling BlueBlobVision.");
-//                robot.vision.setBlueBlobVisionEnabled(true);
-//            }
-        }
-
-        robot.zeroCalibrate();
     }   //robotInit
 
     //
@@ -212,22 +179,11 @@ public class FtcAuto extends FtcOpMode
     @Override
     public void startMode(TrcRobot.RunMode prevMode, TrcRobot.RunMode nextMode)
     {
-        if (TrcDbgTrace.isTraceLogOpened())
-        {
-            TrcDbgTrace.setTraceLogEnabled(true);
-        }
-        robot.globalTracer.traceInfo(
-            moduleName, "***** Starting autonomous: " + TrcTimer.getCurrentTimeString() + " *****");
-        if (Robot.matchInfo != null)
-        {
-            robot.globalTracer.logInfo(moduleName, "MatchInfo", Robot.matchInfo.toString());
-        }
-        robot.globalTracer.logInfo(moduleName, "AutoChoices", autoChoices.toString());
         robot.dashboard.clearDisplay();
         //
         // Tell robot object opmode is about to start so it can do the necessary start initialization for the mode.
         //
-        robot.startMode(nextMode);
+        robot.startMode();
 
         if (robot.battery != null)
         {
@@ -262,21 +218,13 @@ public class FtcAuto extends FtcOpMode
         //
         // Tell robot object opmode is about to stop so it can do the necessary cleanup for the mode.
         //
-        robot.stopMode(prevMode);
+        robot.stopMode();
 
         if (robot.battery != null)
         {
             robot.battery.setEnabled(false);
         }
 
-        printPerformanceMetrics();
-        robot.globalTracer.traceInfo(
-            moduleName, "***** Stopping autonomous: " + TrcTimer.getCurrentTimeString() + " *****");
-
-        if (TrcDbgTrace.isTraceLogOpened())
-        {
-            TrcDbgTrace.closeTraceLog();
-        }
     }   //stopMode
 
     /**

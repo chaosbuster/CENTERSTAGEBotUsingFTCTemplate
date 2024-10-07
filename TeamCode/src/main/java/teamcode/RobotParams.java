@@ -36,6 +36,7 @@ import ftclib.sensor.FtcSparkFunOtos;
 import trclib.dataprocessor.TrcUtil;
 import trclib.drivebase.TrcDriveBase;
 import trclib.drivebase.TrcDriveBase.DriveOrientation;
+import trclib.driverio.TrcGameController;
 import trclib.driverio.TrcGameController.DriveMode;
 import trclib.pathdrive.TrcPose2D;
 import trclib.pathdrive.TrcPose3D;
@@ -57,12 +58,13 @@ public class RobotParams
         public static final double ROBOT_LENGTH                 = 17.0;
         public static final double ROBOT_WIDTH                  = 17.0;
         // Robot Drive Parameters.
-        public static final DriveMode DRIVE_MODE                = DriveMode.ArcadeMode;
-        public static final DriveOrientation DRIVE_ORIENTATION  = DriveOrientation.ROBOT;
         public static final double DRIVE_SLOW_SCALE             = 0.3;
         public static final double DRIVE_NORMAL_SCALE           = 1.0;
         public static final double TURN_SLOW_SCALE              = 0.3;
         public static final double TURN_NORMAL_SCALE            = 0.6;
+        public static final DriveMode ROBOT_DRIVEMODE = DriveMode.ArcadeMode;
+        public static final DriveOrientation DRIVE_ORIENTATION = DriveOrientation.ROBOT;
+
     }   //class Robot
 
     /**
@@ -75,7 +77,7 @@ public class RobotParams
         // This is useful for developing Vision code where all you need is a Control Hub and camera.
         VisionOnly,
         // Generic Mecanum Drive Base Robot
-        MecanumRobot,
+        MecanumRobot
     }   //enum RobotType
 
     /**
